@@ -1,12 +1,3 @@
-/* SoftAP based Provisioning Example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
-
 #include <string.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -15,13 +6,12 @@
 #include <esp_event_loop.h>
 #include <esp_log.h>
 #include <nvs_flash.h>
-
 #include <lwip/err.h>
 #include <lwip/sys.h>
 
-#include "app_prov.h"
+#include "softap_prov.h"
 
-static const char *TAG = "wifi";
+static const char *TAG = "wifilib";
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
@@ -73,7 +63,7 @@ static void wifi_init_sta()
     ESP_ERROR_CHECK(esp_wifi_start() );
 }
 
-void app_main()
+void initwifi()
 {
     /* Initialize networking stack */
     tcpip_adapter_init();
