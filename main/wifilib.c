@@ -1,6 +1,7 @@
 #include <string.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <freertos/event_groups.h>
 #include <esp_system.h>
 #include <esp_wifi.h>
 #include <esp_event_loop.h>
@@ -12,6 +13,9 @@
 #include "softap_prov.h"
 
 static const char *TAG = "wifilib";
+
+EventGroupHandle_t wifi_event_group;
+const int CONNECTED_BIT = BIT0;
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
@@ -32,6 +36,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 			break;
 		case SYSTEM_EVENT_STA_GOT_IP:
 			ESP_LOGI(TAG, "STA got ip:%s", ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
+			xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
 			break;
 		case SYSTEM_EVENT_AP_STACONNECTED:
 			ESP_LOGI(TAG, "SoftAP station:"MACSTR" join, AID=%d",
@@ -45,6 +50,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 			break;
 		case SYSTEM_EVENT_STA_DISCONNECTED:
 			ESP_LOGI(TAG, "STA disconnected");
+			xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
 			esp_wifi_connect();
 			app_prov_start_softap_provisioning(CONFIG_SOFTAP_SSID, CONFIG_SOFTAP_PASS);
 			break;
@@ -63,10 +69,11 @@ static void wifi_init_sta()
     ESP_ERROR_CHECK(esp_wifi_start() );
 }
 
-void initwifi()
+void InitWifi()
 {
     /* Initialize networking stack */
     tcpip_adapter_init();
+	wifi_event_group = xEventGroupCreate();
 
     /* Set our event handling */
     ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));

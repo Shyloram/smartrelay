@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := mywork
+PROJECT_NAME := smartrelay
 
 include $(IDF_PATH)/make/project.mk
 

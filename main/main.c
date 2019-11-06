@@ -4,7 +4,8 @@
 #include "esp_system.h"
 #include "esp_spi_flash.h"
 
-extern void initwifi();
+extern void InitWifi();
+extern void InitAwsIot();
 
 void app_main()
 {
@@ -20,5 +21,8 @@ void app_main()
             (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
 	/* Start wifi  lib */
-	initwifi();
+	InitWifi();
+
+	/* Start AWS IOT */
+	InitAwsIot();
 }
