@@ -1,8 +1,4 @@
-set(COMPONENT_SRCS "main.c"
-                   "softap_prov.c"
-                   "tcp_server.c"
-                   "wifilib.c"
-                   "aws_proc.c")
-set(COMPONENT_ADD_INCLUDEDIRS ".")
+set(COMPONENT_SRCDIRS "." "awsiot" "aplink")
+set(COMPONENT_ADD_INCLUDEDIRS "include" "include/awsiot" "include/aplink" )
 
 register_component()
