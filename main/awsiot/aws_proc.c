@@ -31,9 +31,7 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 
-#ifdef CONFIG_SSL_USING_WOLFSSL
 #include "lwip/apps/sntp.h"
-#endif
 
 #include "aws_iot_config.h"
 #include "aws_iot_log.h"
@@ -62,39 +60,45 @@ extern const uint8_t private_pem_key_end[] asm("_binary_private_pem_key_end");
 char HostAddress[255] = AWS_IOT_MQTT_HOST;
 uint32_t port = AWS_IOT_MQTT_PORT;
 
-#ifdef CONFIG_SSL_USING_WOLFSSL
-static void get_time()
+static void sync_time()
 {
-    struct timeval now;
-    int sntp_retry_cnt = 0;
-    int sntp_retry_time = 0;
+	time_t now = 0;
+	struct tm timeinfo ={0};
+	char strftime_buf[64];
+	int retry = 0;
+	const int retry_count = 10;
 
-    sntp_setoperatingmode(0);
-    sntp_setservername(0, "pool.ntp.org");
-    sntp_init();
+	ESP_LOGI(TAG, "Initializing SNTP");
+	sntp_setoperatingmode(SNTP_OPMODE_POLL);
+	sntp_setservername(0, "pool.ntp.org");
+	sntp_init();
 
-    while (1) {
-        for (int32_t i = 0; (i < (SNTP_RECV_TIMEOUT / 100)) && now.tv_sec < 1525952900; i++) {
-            vTaskDelay(100 / portTICK_RATE_MS);
-            gettimeofday(&now, NULL);
-        }
+	// wait for time to be set
+	while (timeinfo.tm_year < (2019 - 1900) && ++retry < retry_count)
+	{
+		ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
+		vTaskDelay(2000 / portTICK_PERIOD_MS);
+		time(&now);
+		localtime_r(&now, &timeinfo);
+	}
 
-        if (now.tv_sec < 1525952900) {
-            sntp_retry_time = SNTP_RECV_TIMEOUT << sntp_retry_cnt;
+	// Set timezone to China Standard Time
+	setenv("TZ", "CST-8", 1);
+	tzset();
 
-            if (SNTP_RECV_TIMEOUT << (sntp_retry_cnt + 1) < SNTP_RETRY_TIMEOUT_MAX) {
-                sntp_retry_cnt ++;
-            }
+	time(&now);
+	localtime_r(&now, &timeinfo);
 
-            ESP_LOGE(TAG, "SNTP get time failed, retry after %d ms\n", sntp_retry_time);
-            vTaskDelay(sntp_retry_time / portTICK_RATE_MS);
-        } else {
-            ESP_LOGI(TAG, "SNTP get time success\n");
-            break;
-        }
-    }
+	if (timeinfo.tm_year < (2016 - 1900))
+	{
+		ESP_LOGE(TAG, "The current date/time error");
+	}
+	else
+	{
+		strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+		ESP_LOGI(TAG, "The current date/time is: %s", strftime_buf);
+	}
 }
-#endif
 
 void iot_subscribe_callback_handler(AWS_IoT_Client *pClient, char *topicName, uint16_t topicNameLen, IoT_Publish_Message_Params *params, void *pData) 
 {
@@ -174,9 +178,7 @@ void aws_iot_task(void *param)
     xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
                         false, true, portMAX_DELAY);
 
-#ifdef CONFIG_SSL_USING_WOLFSSL
-    get_time();
-#endif
+    sync_time();
 
     connectParams.keepAliveIntervalInSec = 10;
     connectParams.isCleanSession = true;
@@ -189,7 +191,8 @@ void aws_iot_task(void *param)
     ESP_LOGI(TAG, "Connecting to AWS...");
     do {
         rc = aws_iot_mqtt_connect(&client, &connectParams);
-        if(SUCCESS != rc) {
+        if(SUCCESS != rc) 
+		{
             ESP_LOGE(TAG, "Error(%d) connecting to %s:%d", rc, mqttInitParams.pHostURL, mqttInitParams.port);
             vTaskDelay(1000 / portTICK_RATE_MS);
         }
@@ -201,7 +204,8 @@ void aws_iot_task(void *param)
      *  #AWS_IOT_MQTT_MAX_RECONNECT_WAIT_INTERVAL
      */
     rc = aws_iot_mqtt_autoreconnect_set_status(&client, true);
-    if(SUCCESS != rc) {
+    if(SUCCESS != rc) 
+	{
         ESP_LOGE(TAG, "Unable to set Auto Reconnect to true - %d", rc);
         abort();
     }
@@ -211,7 +215,8 @@ void aws_iot_task(void *param)
 
     ESP_LOGI(TAG, "Subscribing...");
     rc = aws_iot_mqtt_subscribe(&client, TOPIC, TOPIC_LEN, QOS0, iot_subscribe_callback_handler, NULL);
-    if(SUCCESS != rc) {
+    if(SUCCESS != rc) 
+	{
         ESP_LOGE(TAG, "Error subscribing : %d ", rc);
         abort();
     }
@@ -231,11 +236,13 @@ void aws_iot_task(void *param)
 
         //Max time the yield function will wait for read messages
         rc = aws_iot_mqtt_yield(&client, 100);
-        if(NETWORK_ATTEMPTING_RECONNECT == rc) {
+        if(NETWORK_ATTEMPTING_RECONNECT == rc) 
+		{
             // If the client is attempting to reconnect we will skip the rest of the loop.
             continue;
         }
 
+#if 0
         ESP_LOGI(TAG, "Stack remaining for task '%s' is %lu bytes", pcTaskGetTaskName(NULL), uxTaskGetStackHighWaterMark(NULL));
         vTaskDelay(1000 / portTICK_RATE_MS);
         sprintf(cPayload, "%s : %d ", "hello from ESP32 (QOS0)", i++);
@@ -249,6 +256,7 @@ void aws_iot_task(void *param)
             ESP_LOGW(TAG, "QOS1 publish ack not received.");
             rc = SUCCESS;
         }
+#endif
     }
 
     ESP_LOGE(TAG, "An error occurred in the main loop.");
