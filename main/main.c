@@ -4,6 +4,7 @@
 #include "esp_system.h"
 #include "esp_spi_flash.h"
 
+extern void InitPara();
 extern void InitWifi();
 extern void InitAwsIot();
 
@@ -14,15 +15,16 @@ void app_main()
     esp_chip_info(&chip_info);
     printf("This is ESP8266 chip with %d CPU cores, WiFi, ",
             chip_info.cores);
-
     printf("silicon revision %d, ", chip_info.revision);
-
     printf("%dMB %s flash\n", spi_flash_get_chip_size() / (1024 * 1024),
             (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
-	/* Start wifi  lib */
+	/* Init Parameter */
+	InitPara();
+
+	/* Start Wifi Lib */
 	InitWifi();
 
 	/* Start AWS IOT */
-	InitAwsIot();
+	//InitAwsIot();
 }

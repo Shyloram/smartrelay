@@ -24,5 +24,5 @@ $(COMPONENT_PATH)/certs/certificate.pem.crt $(COMPONENT_PATH)/certs/private.pem.
 	echo "Dummy certificate data for continuous integration" > $@
 endif
 
-COMPONENT_ADD_INCLUDEDIRS := include include/awsiot include/aplink
-COMPONENT_SRCDIRS := . awsiot aplink 
+COMPONENT_ADD_INCLUDEDIRS := include include/awsiot include/aplink include/parameter
+COMPONENT_SRCDIRS := . awsiot aplink parameter
