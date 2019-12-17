@@ -1,3 +1,5 @@
+#ifndef __SOFTAP_PROV__
+#define __SOFTAP_PROV__
 #pragma once
 
 #include <esp_event_loop.h>
@@ -61,3 +63,4 @@ esp_err_t app_prov_configure_sta(const char* ssid, const char* pwd);
  *  - ESP_FAIL    : Failed to start
  */
 esp_err_t app_prov_start_softap_provisioning(const char *ssid, const char *pass);
+#endif 

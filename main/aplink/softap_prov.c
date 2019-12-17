@@ -17,8 +17,8 @@
 
 static const char *TAG = "softap_prov";
 
-extern void app_prov_start_tcp_service();
-extern void app_prov_stop_tcp_service();
+extern void app_prov_start_ap_service();
+extern void app_prov_stop_ap_service();
 
 /**
  * @brief   Data relevant to provisioning application
@@ -37,7 +37,7 @@ static struct app_prov_data *g_prov;
 static void stop_prov_task(void * arg)
 {
     ESP_LOGI(TAG, "Stopping provisioning");
-	app_prov_stop_tcp_service();
+	app_prov_stop_ap_service();
     esp_wifi_set_mode(WIFI_MODE_STA);
 
     /* Timer not needed anymore */
@@ -324,7 +324,7 @@ esp_err_t app_prov_start_softap_provisioning(const char *ssid, const char *pass)
     }
 
     /* Start provisioning service through HTTP */
-    app_prov_start_tcp_service();
+    app_prov_start_ap_service();
 
     ESP_LOGI(TAG, "SoftAP Provisioning started with SSID '%s', Password '%s'", ssid, pass);
     return ESP_OK;

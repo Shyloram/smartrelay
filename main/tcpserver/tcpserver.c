@@ -1,11 +1,3 @@
-/* BSD Socket API Example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
 #include <string.h>
 #include <unistd.h>
 #include <sys/param.h>
@@ -23,24 +15,25 @@
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
+#include "parameter.h"
 
-#define PORT 3333 //CONFIG_EXAMPLE_PORT
+#define PORT 3334 //CONFIG_EXAMPLE_PORT
 
 static const char *TAG = "tcp-server";
-static int tcp_task_run;
+extern EventGroupHandle_t wifi_event_group;
+extern const int CONNECTED_BIT;
 
 static void tcp_server_task(void *pvParameters)
 {
-	char rx_buffer[128] = {};
+	char rx_buffer[1024] = {};
 	char addr_str[128] = {};
-	char ssid[100] = {};
-	char pwd[100] = {};
-	char userid[100] = {};
+	char *response = NULL;
 	int addr_family;
 	int ip_protocol;
 	int listen_sock = -1;
 	int sock = -1;
 
+	xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,false, true, portMAX_DELAY);
 	do
 	{
 		struct sockaddr_in destAddr;
@@ -78,7 +71,7 @@ static void tcp_server_task(void *pvParameters)
 		struct sockaddr_in sourceAddr;
 		uint addrLen = sizeof(sourceAddr);
 
-		while (tcp_task_run) 
+		while (1) 
 		{
 			int s;
 			fd_set rfds;
@@ -132,35 +125,15 @@ static void tcp_server_task(void *pvParameters)
 						else 
 						{
 							inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
-
 							rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
 							ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
 							ESP_LOGI(TAG, "%s", rx_buffer);
-
-							if(strncmp("SSID",rx_buffer,4))//error
+							response = SetPara(rx_buffer);
+							if(response)
 							{
-								int err = send(sock, "error", 5, 0);
-								if (err < 0) 
-								{
-									ESP_LOGE(TAG, "Error occured during sending: errno %d", errno);
-									break;
-								}
+								send(sock,response,strlen(response),0);
 							}
-							else
-							{
-								memcpy(ssid, rx_buffer + strlen("SSID="), strstr(rx_buffer,"&PWD=") - rx_buffer - strlen("SSID="));
-								memcpy(pwd, strstr(rx_buffer,"&PWD=") + strlen("&PWD="), strstr(rx_buffer,"&Userid=") - strstr(rx_buffer,"&PWD=") - strlen("&PWD="));
-								memcpy(userid, strstr(rx_buffer,"&Userid=") + strlen("&Userid="), strlen(rx_buffer) - (strstr(rx_buffer,"&Userid=") - rx_buffer) - strlen("&Userid="));
-								ESP_LOGI(TAG, "ssid=%s,pwd=%s,userid=%s\n",ssid,pwd,userid);
-								app_prov_configure_sta(ssid,pwd);
-								int err = send(sock, "ok", 2, 0);
-								if (err < 0) 
-								{
-									ESP_LOGE(TAG, "Error occured during sending: errno %d", errno);
-									break;
-								}
-								break;
-							}
+							free(response);
 						}
 					}
 
@@ -173,7 +146,7 @@ static void tcp_server_task(void *pvParameters)
 					}
 				}
 			}
-	}
+		}
 	}while(0);
 
 	if (listen_sock != -1) 
@@ -185,12 +158,7 @@ static void tcp_server_task(void *pvParameters)
 	vTaskDelete(NULL);
 }
 
-void app_prov_stop_tcp_service()
+void InitTcpService()
 {
-	tcp_task_run = 0;
-}
-void app_prov_start_tcp_service()
-{
-	tcp_task_run = 1;
     xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 5, NULL);
 }

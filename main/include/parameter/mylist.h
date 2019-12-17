@@ -1,3 +1,6 @@
+#ifndef __MYLIST__
+#define __MYLIST__
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -81,3 +84,4 @@ int LoadVListFromJson(VLIST* pvlist,char* json);
 //RelayPara
 char* DumpJsonFromRPara(RPARA* prpara);
 int LoadRParaFromJson(RPARA* prpara,char* json);
+#endif

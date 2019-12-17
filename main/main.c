@@ -7,6 +7,7 @@
 extern void InitPara();
 extern void InitWifi();
 extern void InitAwsIot();
+extern void InitTcpService();
 
 void app_main()
 {
@@ -22,9 +23,12 @@ void app_main()
 	/* Init Parameter */
 	InitPara();
 
-	/* Start Wifi Lib */
+	/* Init Wifi Lib */
 	InitWifi();
 
-	/* Start AWS IOT */
+	/* Init Tcp Server */
+	InitTcpService();
+
+	/* Init AWS IOT */
 	//InitAwsIot();
 }
