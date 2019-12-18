@@ -275,7 +275,7 @@ char* AddValve(cJSON *payload)
 	item = cJSON_GetObjectItemCaseSensitive(payload,"Model");
 	if(cJSON_IsString(item) && (item->valuestring != NULL))
 	{
-		strcpy(velem.MAC,item->valuestring);
+		strcpy(velem.Model,item->valuestring);
 	}
 	else
 	{

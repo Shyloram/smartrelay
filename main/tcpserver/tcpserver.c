@@ -90,7 +90,7 @@ static void tcp_server_task(void *pvParameters)
 			}
 			else if(s == 0)
 			{
-				ESP_LOGI(TAG, "Select time out");
+				//ESP_LOGI(TAG, "Select time out");
 				continue;
 			}
 			else if(s > 0)

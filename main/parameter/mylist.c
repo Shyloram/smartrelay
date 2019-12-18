@@ -45,25 +45,43 @@ int AddElemIntoSList(SLIST* pslist,SELEM* selem)
 		printf("input arg is NULL\n");
 		return -1;
 	}
-	if(pslist->cnt >= pslist->maxlen)
+
+	SELEM* pselem = pslist->tail;
+	while(pselem)
 	{
-		printf("list is FULL\n");
-		return -2;
+		if(!strcmp(selem->Id,pselem->Id))
+		{
+			break;
+		}
+		pselem = pselem->next;
 	}
-	SELEM* pselem = (SELEM *)malloc(sizeof(SELEM));
 	if(!pselem)
 	{
-		printf("malloc pselem error!\n");
+		if(pslist->cnt >= pslist->maxlen)
+		{
+			printf("list is FULL\n");
+			return -2;
+		}
+		SELEM* pselem = (SELEM *)malloc(sizeof(SELEM));
+		if(!pselem)
+		{
+			printf("malloc pselem error!\n");
+			return -1;
+		}
+		strcpy(pselem->Id,selem->Id);
+		pselem->Enable = selem->Enable;
+		pselem->Duration = selem->Duration;
+		pselem->Time = selem->Time;
+		pselem->Week = selem->Week;
+		pselem->next = pslist->tail;
+		pslist->tail = pselem;
+		pslist->cnt++;
+	}
+	else
+	{
+		printf("This id:%s is already exist in list.\n",selem->Id);
 		return -1;
 	}
-	strcpy(pselem->Id,selem->Id);
-	pselem->Enable = selem->Enable;
-	pselem->Duration = selem->Duration;
-	pselem->Time = selem->Time;
-	pselem->Week = selem->Week;
-	pselem->next = pslist->tail;
-	pslist->tail = pselem;
-	pslist->cnt++;
 	return 0;
 }
 
@@ -318,33 +336,53 @@ int AddElemIntoVList(VLIST* pvlist,VELEM* velem,char* json)
 		printf("input arg is NULL\n");
 		return -1;
 	}
-	if(pvlist->cnt >= pvlist->maxlen)
+
+	VELEM* pvelem = pvlist->tail;
+	while(pvelem)
 	{
-		printf("list is FULL\n");
-		return -2;
+		if(!strcmp(velem->ValveId,pvelem->ValveId))
+		{
+			break;
+		}
+		pvelem = pvelem->next;
 	}
-	VELEM* pvelem = (VELEM *)malloc(sizeof(VELEM));
 	if(!pvelem)
 	{
-		printf("malloc pvelem error!\n");
+		if(pvlist->cnt >= pvlist->maxlen)
+		{
+			printf("list is FULL\n");
+			return -2;
+		}
+		VELEM* pvelem = (VELEM *)malloc(sizeof(VELEM));
+		if(!pvelem)
+		{
+			printf("malloc pvelem error!\n");
+			return -1;
+		}
+		strcpy(pvelem->ValveId,velem->ValveId);
+		strcpy(pvelem->FwVer,velem->FwVer);
+		strcpy(pvelem->HwVer,velem->HwVer);
+		strcpy(pvelem->Model,velem->Model);
+		strcpy(pvelem->MAC,velem->MAC);
+		pvelem->ChildLock = 0;
+		pvelem->ManualEnable = 0;
+		pvelem->ManualDuration = 30;
+		pvelem->pslist = InitSList();
+		if(json)
+		{
+			LoadSListFromJson(pvelem->pslist,json);
+		}
+		pvelem->next = pvlist->tail;
+		pvlist->tail = pvelem;
+		pvlist->cnt++;
+	}
+	else
+	{
+	{
+		printf("This id:%s is already exist in list.\n",velem->ValveId);
 		return -1;
 	}
-	strcpy(pvelem->ValveId,velem->ValveId);
-	strcpy(pvelem->FwVer,velem->FwVer);
-	strcpy(pvelem->HwVer,velem->HwVer);
-	strcpy(pvelem->Model,velem->Model);
-	strcpy(pvelem->MAC,velem->MAC);
-	pvelem->ChildLock = 0;
-	pvelem->ManualEnable = 0;
-	pvelem->ManualDuration = 30;
-	pvelem->pslist = InitSList();
-	if(json)
-	{
-		LoadSListFromJson(pvelem->pslist,json);
 	}
-	pvelem->next = pvlist->tail;
-	pvlist->tail = pvelem;
-	pvlist->cnt++;
 	return 0;
 }
 
