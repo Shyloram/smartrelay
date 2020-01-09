@@ -772,9 +772,9 @@ char* DumpJsonFromRPara(RPARA* prpara)
 
 int LoadRParaFromJson(RPARA* prpara,char* json)
 {
-	if(!prpara)
+	if(!prpara || !json)
 	{
-		printf("prpara is NULL\n");
+		printf("prpara or json is NULL\n");
 		return -1;
 	}
 	cJSON *root = NULL;

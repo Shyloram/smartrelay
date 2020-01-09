@@ -24,6 +24,9 @@
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
+#include "parameter.h"
+#include "aws_interface.h"
+
 #define PORT 3333 //CONFIG_EXAMPLE_PORT
 
 static const char *TAG = "ap-server";
@@ -31,15 +34,19 @@ static int ap_task_run;
 
 static void ap_server_task(void *pvParameters)
 {
-	char rx_buffer[128] = {};
+	char rx_buffer[200] = {};
 	char addr_str[128] = {};
-	char ssid[100] = {};
-	char pwd[100] = {};
-	char userid[100] = {};
+	char ssid[33] = {};
+	char pwd[65] = {};
+	char userid[17] = {};
 	int addr_family;
 	int ip_protocol;
 	int listen_sock = -1;
 	int sock = -1;
+	int ret = -1;
+	cJSON *root = NULL;
+	cJSON *item = NULL;
+	char *relayjson = NULL;
 
 	do
 	{
@@ -137,43 +144,84 @@ static void ap_server_task(void *pvParameters)
 							ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
 							ESP_LOGI(TAG, "%s", rx_buffer);
 
-							if(strncmp("SSID",rx_buffer,4))//error
+							do
 							{
-								int err = send(sock, "error", 5, 0);
+								root = cJSON_Parse(rx_buffer);
+								if(root == NULL)
+								{
+									printf("json parse error!\n");
+									break;
+								}
+								item = cJSON_GetObjectItemCaseSensitive(root,"Ssid");
+								if(cJSON_IsString(item) && (item->valuestring != NULL))
+								{
+									strcpy(ssid,item->valuestring);
+								}
+								else
+								{
+									printf("ssid parse error!\n");
+									break;
+								}
+								item = cJSON_GetObjectItemCaseSensitive(root,"Password");
+								if(cJSON_IsString(item) && (item->valuestring != NULL))
+								{
+									strcpy(pwd,item->valuestring);
+								}
+								else
+								{
+									printf("password parse error!\n");
+									break;
+								}
+								item = cJSON_GetObjectItemCaseSensitive(root,"UserId");
+								if(cJSON_IsString(item) && (item->valuestring != NULL))
+								{
+									strcpy(userid,item->valuestring);
+								}
+								else
+								{
+									printf("userid parse error!\n");
+									break;
+								}
+								ESP_LOGI(TAG, "ssid=%s,pwd=%s,userid=%s\n",ssid,pwd,userid);
+								aws_set_userid(userid);
+								ret = app_prov_configure_sta(ssid,pwd);
+							}while(0);
+							if(root)
+							{
+								cJSON_Delete(root);
+							}
+							if(ret == 0)
+							{
+								relayjson = DumpRelayPara();
+								int err = send(sock, relayjson, strlen(relayjson), 0);
 								if (err < 0) 
 								{
 									ESP_LOGE(TAG, "Error occured during sending: errno %d", errno);
-									break;
 								}
+								free(relayjson);
 							}
 							else
 							{
-								memcpy(ssid, rx_buffer + strlen("SSID="), strstr(rx_buffer,"&PWD=") - rx_buffer - strlen("SSID="));
-								memcpy(pwd, strstr(rx_buffer,"&PWD=") + strlen("&PWD="), strstr(rx_buffer,"&Userid=") - strstr(rx_buffer,"&PWD=") - strlen("&PWD="));
-								memcpy(userid, strstr(rx_buffer,"&Userid=") + strlen("&Userid="), strlen(rx_buffer) - (strstr(rx_buffer,"&Userid=") - rx_buffer) - strlen("&Userid="));
-								ESP_LOGI(TAG, "ssid=%s,pwd=%s,userid=%s\n",ssid,pwd,userid);
-								app_prov_configure_sta(ssid,pwd);
-								int err = send(sock, "ok", 2, 0);
+								int err = send(sock, "{\"ret\":\"error\"}", 15, 0);
 								if (err < 0) 
 								{
 									ESP_LOGE(TAG, "Error occured during sending: errno %d", errno);
-									break;
 								}
-								break;
 							}
+							break;
 						}
 					}
+				}
 
-					if (sock != -1) 
-					{
-						ESP_LOGI(TAG, "Shutting down socket and re accepting...");
-						shutdown(sock, 0);
-						close(sock);
-						sock = -1;
-					}
+				if (sock != -1) 
+				{
+					ESP_LOGI(TAG, "Shutting down socket and re accepting...");
+					shutdown(sock, 0);
+					close(sock);
+					sock = -1;
 				}
 			}
-	}
+		}
 	}while(0);
 
 	if (listen_sock != -1) 
