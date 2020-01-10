@@ -10,7 +10,7 @@ SLIST* InitSList()
 		return NULL;
 	}
 	pslist->tail = NULL;
-	pslist->maxlen = 16;
+	pslist->maxlen = 5;
 	pslist->cnt = 0;
 	return pslist;
 }
@@ -193,7 +193,7 @@ int SetElemFromSList(SLIST* pslist,SELEM* selem)
 	return 0;
 }
 
-char*  DumpJsonFromSList(SLIST* pslist)
+cJSON*  DumpJsonFromSList(SLIST* pslist)
 {
 	if(!pslist)
 	{
@@ -202,29 +202,26 @@ char*  DumpJsonFromSList(SLIST* pslist)
 	}
 	cJSON *array = NULL;
 	cJSON *fld = NULL;
-	char* json = NULL;
 	SELEM* pselem = pslist->tail;
 	array = cJSON_CreateArray();
 	while(pselem)
 	{
 		cJSON_AddItemToArray(array, fld = cJSON_CreateObject());
-		cJSON_AddStringToObject(fld, "Id", pselem->Id);
-		cJSON_AddNumberToObject(fld, "Enable", pselem->Enable);
-		cJSON_AddNumberToObject(fld, "Duration", pselem->Duration);
-		cJSON_AddNumberToObject(fld, "Time", pselem->Time);
-		cJSON_AddNumberToObject(fld, "Week", pselem->Week);
+		cJSON_AddStringToObject(fld, "ID", pselem->Id);
+		cJSON_AddNumberToObject(fld, "EN", pselem->Enable);
+		cJSON_AddNumberToObject(fld, "DU", pselem->Duration);
+		cJSON_AddNumberToObject(fld, "TM", pselem->Time);
+		cJSON_AddNumberToObject(fld, "WK", pselem->Week);
 		pselem = pselem->next;
 	}
-	json = cJSON_PrintUnformatted(array);
-	cJSON_Delete(array);
-	return json;
+	return array;
 }
 
-int LoadSListFromJson(SLIST* pslist,char* json)
+int LoadSListFromJson(SLIST* pslist,cJSON* json)
 {
-	if(!pslist)
+	if(!pslist || !json)
 	{
-		printf("pslist is NULL\n");
+		printf("pslist or json is NULL\n");
 		return -1;
 	}
 	if(pslist->tail != NULL)
@@ -232,48 +229,40 @@ int LoadSListFromJson(SLIST* pslist,char* json)
 		printf("slist is not empty! Can not load Json!\n");
 		return -1;
 	}
-	cJSON *array = NULL;
 	cJSON *item = NULL;
 	cJSON *fld = NULL;
 	SELEM selem = {0};
 	int i = 0;
 
-	array = cJSON_Parse(json);
-	if(array == NULL)
+	for(i = 0;i < cJSON_GetArraySize(json);i++)
 	{
-		printf("json parse error!\n");
-		return -1;
-	}
+		item = cJSON_GetArrayItem(json,i);
 
-	for(i = 0;i < cJSON_GetArraySize(array);i++)
-	{
-		item = cJSON_GetArrayItem(array,i);
-
-		fld = cJSON_GetObjectItemCaseSensitive(item,"Id");
+		fld = cJSON_GetObjectItemCaseSensitive(item,"ID");
 		if(cJSON_IsString(fld) && (fld->valuestring != NULL))
 		{
 			strcpy(selem.Id,fld->valuestring);
 		}
 
-		fld = cJSON_GetObjectItemCaseSensitive(item,"Enable");
+		fld = cJSON_GetObjectItemCaseSensitive(item,"EN");
 		if(cJSON_IsNumber(fld))
 		{
 			selem.Enable = fld->valueint;
 		}
 
-		fld = cJSON_GetObjectItemCaseSensitive(item,"Duration");
+		fld = cJSON_GetObjectItemCaseSensitive(item,"DU");
 		if(cJSON_IsNumber(fld))
 		{
 			selem.Duration = fld->valueint;
 		}
 
-		fld = cJSON_GetObjectItemCaseSensitive(item,"Time");
+		fld = cJSON_GetObjectItemCaseSensitive(item,"TM");
 		if(cJSON_IsNumber(fld))
 		{
 			selem.Time = fld->valueint;
 		}
 
-		fld = cJSON_GetObjectItemCaseSensitive(item,"Week");
+		fld = cJSON_GetObjectItemCaseSensitive(item,"WK");
 		if(cJSON_IsNumber(fld))
 		{
 			selem.Week = fld->valueint;
@@ -282,7 +271,6 @@ int LoadSListFromJson(SLIST* pslist,char* json)
 		AddElemIntoSList(pslist,&selem);
 		memset(&selem,0,sizeof(SELEM));
 	}
-	cJSON_Delete(array);
 	return 0;
 }
 
@@ -329,7 +317,7 @@ int ReleaseVList(VLIST* pvlist)
 	return 0;
 }
 
-int AddElemIntoVList(VLIST* pvlist,VELEM* velem,char* json)
+int AddElemIntoVList(VLIST* pvlist,VELEM* velem,cJSON* json)
 {
 	if(!pvlist || !velem)
 	{
@@ -614,7 +602,7 @@ int SetElemFromVListSchedule(VLIST* pvlist,char* id,SELEM* selem)
 	return 0;
 }
 
-char* DumpJsonFromVList(VLIST* pvlist)
+cJSON* DumpJsonFromVList(VLIST* pvlist)
 {
 	if(!pvlist)
 	{
@@ -624,37 +612,31 @@ char* DumpJsonFromVList(VLIST* pvlist)
 	cJSON *array = NULL;
 	cJSON *fld = NULL;
 	cJSON *sch = NULL;
-	char  *sjson = NULL;
-	char  *json = NULL;
 	VELEM* pvelem = pvlist->tail;
 	array = cJSON_CreateArray();
 	while(pvelem)
 	{
 		cJSON_AddItemToArray(array, fld = cJSON_CreateObject());
-		cJSON_AddStringToObject(fld, "ValveId", pvelem->ValveId);
-		cJSON_AddStringToObject(fld, "FwVer", pvelem->FwVer);
-		cJSON_AddStringToObject(fld, "HwVer", pvelem->HwVer);
-		cJSON_AddStringToObject(fld, "Model", pvelem->Model);
+		cJSON_AddStringToObject(fld, "VID", pvelem->ValveId);
+		cJSON_AddStringToObject(fld, "FV", pvelem->FwVer);
+		cJSON_AddStringToObject(fld, "HV", pvelem->HwVer);
+		cJSON_AddStringToObject(fld, "MOD", pvelem->Model);
 		cJSON_AddStringToObject(fld, "MAC", pvelem->MAC);
-		cJSON_AddNumberToObject(fld, "ChildLock", pvelem->ChildLock);
-		cJSON_AddNumberToObject(fld, "ManualEnable", pvelem->ManualEnable);
-		cJSON_AddNumberToObject(fld, "ManualDuration", pvelem->ManualDuration);
-		sjson = DumpJsonFromSList(pvelem->pslist);
-		sch = cJSON_Parse(sjson);
-		cJSON_AddItemToObject(fld, "Schedule", sch);
-		free(sjson);
+		cJSON_AddNumberToObject(fld, "CLK", pvelem->ChildLock);
+		cJSON_AddNumberToObject(fld, "MEN", pvelem->ManualEnable);
+		cJSON_AddNumberToObject(fld, "MDU", pvelem->ManualDuration);
+		sch = DumpJsonFromSList(pvelem->pslist);
+		cJSON_AddItemToObject(fld, "SCH", sch);
 		pvelem = pvelem->next;
 	}
-	json = cJSON_PrintUnformatted(array);
-	cJSON_Delete(array);
-	return json;
+	return array;
 }
 
-int LoadVListFromJson(VLIST* pvlist,char* json)
+int LoadVListFromJson(VLIST* pvlist,cJSON* json)
 {
-	if(!pvlist)
+	if(!pvlist || !json)
 	{
-		printf("[%s]pvlist is NULL\n",__func__);
+		printf("[%s]pvlist or json is NULL\n",__func__);
 		return -1;
 	}
 	if(pvlist->tail != NULL)
@@ -662,43 +644,34 @@ int LoadVListFromJson(VLIST* pvlist,char* json)
 		printf("slist is not empty! Can not load Json!\n");
 		return -1;
 	}
-	cJSON *array = NULL;
 	cJSON *item = NULL;
 	cJSON *fld = NULL;
-	char* sch = NULL;
 	VELEM velem = {0};
 	int i = 0;
 
-	array = cJSON_Parse(json);
-	if(array == NULL)
+	for(i = 0;i < cJSON_GetArraySize(json);i++)
 	{
-		printf("json parse error!\n");
-		return -1;
-	}
+		item = cJSON_GetArrayItem(json,i);
 
-	for(i = 0;i < cJSON_GetArraySize(array);i++)
-	{
-		item = cJSON_GetArrayItem(array,i);
-
-		fld = cJSON_GetObjectItemCaseSensitive(item,"ValveId");
+		fld = cJSON_GetObjectItemCaseSensitive(item,"VID");
 		if(cJSON_IsString(fld) && (fld->valuestring != NULL))
 		{
 			strcpy(velem.ValveId,fld->valuestring);
 		}
 
-		fld = cJSON_GetObjectItemCaseSensitive(item,"FwVer");
+		fld = cJSON_GetObjectItemCaseSensitive(item,"FV");
 		if(cJSON_IsString(fld) && (fld->valuestring != NULL))
 		{
 			strcpy(velem.FwVer,fld->valuestring);
 		}
 
-		fld = cJSON_GetObjectItemCaseSensitive(item,"HwVer");
+		fld = cJSON_GetObjectItemCaseSensitive(item,"HV");
 		if(cJSON_IsString(fld) && (fld->valuestring != NULL))
 		{
 			strcpy(velem.HwVer,fld->valuestring);
 		}
 
-		fld = cJSON_GetObjectItemCaseSensitive(item,"Model");
+		fld = cJSON_GetObjectItemCaseSensitive(item,"MOD");
 		if(cJSON_IsString(fld) && (fld->valuestring != NULL))
 		{
 			strcpy(velem.Model,fld->valuestring);
@@ -710,38 +683,57 @@ int LoadVListFromJson(VLIST* pvlist,char* json)
 			strcpy(velem.MAC,fld->valuestring);
 		}
 
-		fld = cJSON_GetObjectItemCaseSensitive(item,"ChildLock");
+		fld = cJSON_GetObjectItemCaseSensitive(item,"CLK");
 		if(cJSON_IsNumber(fld))
 		{
 			velem.ChildLock = fld->valueint;
 		}
 
-		fld = cJSON_GetObjectItemCaseSensitive(item,"ManualEnable");
+		fld = cJSON_GetObjectItemCaseSensitive(item,"MEN");
 		if(cJSON_IsNumber(fld))
 		{
 			velem.ManualEnable = fld->valueint;
 		}
 
-		fld = cJSON_GetObjectItemCaseSensitive(item,"ManualDuration");
+		fld = cJSON_GetObjectItemCaseSensitive(item,"MDU");
 		if(cJSON_IsNumber(fld))
 		{
 			velem.ManualDuration = fld->valueint;
 		}
 
-		fld = cJSON_GetObjectItemCaseSensitive(item,"Schedule");
+		fld = cJSON_GetObjectItemCaseSensitive(item,"SCH");
 		if(cJSON_IsArray(fld))
 		{
-			sch = cJSON_PrintUnformatted(fld);
-			AddElemIntoVList(pvlist,&velem,sch);
-			free(sch);
+			AddElemIntoVList(pvlist,&velem,fld);
 		}
 		memset(&velem,0,sizeof(VELEM));
 	}
-	cJSON_Delete(array);
 	return 0;
 }
 
 //RelayPara
+char* DumpJsonFromOnlyRPara(RPARA* prpara)
+{
+	if(!prpara)
+	{
+		printf("prpara is NULL\n");
+		return NULL;
+	}
+	cJSON *root = NULL;
+	char  *json = NULL;
+	root = cJSON_CreateObject();
+	cJSON_AddStringToObject(root, "RID", prpara->RelayId);
+	cJSON_AddStringToObject(root, "UID", prpara->UserId);
+	cJSON_AddStringToObject(root, "FV", prpara->FwVer);
+	cJSON_AddStringToObject(root, "HV", prpara->HwVer);
+	cJSON_AddStringToObject(root, "MOD", prpara->Model);
+	cJSON_AddStringToObject(root, "MAC", prpara->MAC);
+	cJSON_AddStringToObject(root, "ADD", prpara->Address);
+	json = cJSON_PrintUnformatted(root);
+	cJSON_Delete(root);
+	return json;
+}
+
 char* DumpJsonFromRPara(RPARA* prpara)
 {
 	if(!prpara)
@@ -751,20 +743,17 @@ char* DumpJsonFromRPara(RPARA* prpara)
 	}
 	cJSON *root = NULL;
 	cJSON *fld = NULL;
-	char  *vjson = NULL;
 	char  *json = NULL;
 	root = cJSON_CreateObject();
-	cJSON_AddStringToObject(root, "RelayId", prpara->RelayId);
-	cJSON_AddStringToObject(root, "UserId", prpara->UserId);
-	cJSON_AddStringToObject(root, "FwVer", prpara->FwVer);
-	cJSON_AddStringToObject(root, "HwVer", prpara->HwVer);
-	cJSON_AddStringToObject(root, "Model", prpara->Model);
+	cJSON_AddStringToObject(root, "RID", prpara->RelayId);
+	cJSON_AddStringToObject(root, "UID", prpara->UserId);
+	cJSON_AddStringToObject(root, "FV", prpara->FwVer);
+	cJSON_AddStringToObject(root, "HV", prpara->HwVer);
+	cJSON_AddStringToObject(root, "MOD", prpara->Model);
 	cJSON_AddStringToObject(root, "MAC", prpara->MAC);
-	cJSON_AddStringToObject(root, "Address", prpara->Address);
-	vjson = DumpJsonFromVList(prpara->pvlist);
-	fld = cJSON_Parse(vjson);
-	cJSON_AddItemToObject(root, "ValveList", fld);
-	free(vjson);
+	cJSON_AddStringToObject(root, "ADD", prpara->Address);
+	fld = DumpJsonFromVList(prpara->pvlist);
+	cJSON_AddItemToObject(root, "VL", fld);
 	json = cJSON_PrintUnformatted(root);
 	cJSON_Delete(root);
 	return json;
@@ -779,7 +768,6 @@ int LoadRParaFromJson(RPARA* prpara,char* json)
 	}
 	cJSON *root = NULL;
 	cJSON *fld = NULL;
-	char* valve = NULL;
 
 	root = cJSON_Parse(json);
 	if(root == NULL)
@@ -788,31 +776,31 @@ int LoadRParaFromJson(RPARA* prpara,char* json)
 		return -1;
 	}
 
-	fld = cJSON_GetObjectItemCaseSensitive(root,"RelayId");
+	fld = cJSON_GetObjectItemCaseSensitive(root,"RID");
 	if(cJSON_IsString(fld) && (fld->valuestring != NULL))
 	{
 		strcpy(prpara->RelayId,fld->valuestring);
 	}
 
-	fld = cJSON_GetObjectItemCaseSensitive(root,"UserId");
+	fld = cJSON_GetObjectItemCaseSensitive(root,"UID");
 	if(cJSON_IsString(fld) && (fld->valuestring != NULL))
 	{
 		strcpy(prpara->UserId,fld->valuestring);
 	}
 
-	fld = cJSON_GetObjectItemCaseSensitive(root,"FwVer");
+	fld = cJSON_GetObjectItemCaseSensitive(root,"FV");
 	if(cJSON_IsString(fld) && (fld->valuestring != NULL))
 	{
 		strcpy(prpara->FwVer,fld->valuestring);
 	}
 
-	fld = cJSON_GetObjectItemCaseSensitive(root,"HwVer");
+	fld = cJSON_GetObjectItemCaseSensitive(root,"HV");
 	if(cJSON_IsString(fld) && (fld->valuestring != NULL))
 	{
 		strcpy(prpara->HwVer,fld->valuestring);
 	}
 
-	fld = cJSON_GetObjectItemCaseSensitive(root,"Model");
+	fld = cJSON_GetObjectItemCaseSensitive(root,"MOD");
 	if(cJSON_IsString(fld) && (fld->valuestring != NULL))
 	{
 		strcpy(prpara->Model,fld->valuestring);
@@ -824,24 +812,21 @@ int LoadRParaFromJson(RPARA* prpara,char* json)
 		strcpy(prpara->MAC,fld->valuestring);
 	}
 
-	fld = cJSON_GetObjectItemCaseSensitive(root,"Address");
+	fld = cJSON_GetObjectItemCaseSensitive(root,"ADD");
 	if(cJSON_IsString(fld) && (fld->valuestring != NULL))
 	{
 		strcpy(prpara->Address,fld->valuestring);
 	}
 
-	fld = cJSON_GetObjectItemCaseSensitive(root,"ValveList");
+	fld = cJSON_GetObjectItemCaseSensitive(root,"VL");
 	if(cJSON_IsArray(fld))
 	{
-		valve = cJSON_PrintUnformatted(fld);
 		if(prpara->pvlist == NULL)
 		{
 			prpara->pvlist = InitVList();
 		}
-		LoadVListFromJson(prpara->pvlist,valve);
-		free(valve);
+		LoadVListFromJson(prpara->pvlist,fld);
 	}
-
 	cJSON_Delete(root);
 	return 0;
 }

@@ -132,8 +132,8 @@ static void tcp_server_task(void *pvParameters)
 							if(response)
 							{
 								send(sock,response,strlen(response),0);
+								free(response);
 							}
-							free(response);
 						}
 					}
 

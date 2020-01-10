@@ -14,40 +14,49 @@ char* SetRelayFactory(cJSON *payload)
 	cJSON *item = NULL;
 	char *rjson = NULL;
 	char *buf = NULL;
+	int need_save = 0;
 
 	item = cJSON_GetObjectItemCaseSensitive(payload,"RelayId");
 	if(cJSON_IsString(item) && (item->valuestring != NULL))
 	{
 		strcpy(relay.RelayId,item->valuestring);
+		need_save = 1;
 	}
 
 	item = cJSON_GetObjectItemCaseSensitive(payload,"FwVer");
 	if(cJSON_IsString(item) && (item->valuestring != NULL))
 	{
 		strcpy(relay.FwVer,item->valuestring);
+		need_save = 1;
 	}
 
 	item = cJSON_GetObjectItemCaseSensitive(payload,"HwVer");
 	if(cJSON_IsString(item) && (item->valuestring != NULL))
 	{
 		strcpy(relay.HwVer,item->valuestring);
+		need_save = 1;
 	}
 
 	item = cJSON_GetObjectItemCaseSensitive(payload,"Model");
 	if(cJSON_IsString(item) && (item->valuestring != NULL))
 	{
 		strcpy(relay.Model,item->valuestring);
+		need_save = 1;
 	}
 
 	item = cJSON_GetObjectItemCaseSensitive(payload,"MAC");
 	if(cJSON_IsString(item) && (item->valuestring != NULL))
 	{
 		strcpy(relay.MAC,item->valuestring);
+		need_save = 1;
 	}
 
-	buf = DumpJsonFromRPara(&relay);
-	SaveDate(buf,strlen(buf));
-	free(buf);
+	if(need_save)
+	{
+		buf = DumpJsonFromRPara(&relay);
+		SaveDate(buf,strlen(buf));
+		free(buf);
+	}
 
 	rjson = (char*)malloc(10);
 	if(rjson)
@@ -62,16 +71,21 @@ char* SetRelayAddress(cJSON *payload)
 	cJSON *item = NULL;
 	char* rjson = NULL;
 	char *buf = NULL;
+	int need_save = 0;
 
 	item = cJSON_GetObjectItemCaseSensitive(payload,"Address");
 	if(cJSON_IsString(item) && (item->valuestring != NULL))
 	{
 		strcpy(relay.Address,item->valuestring);
+		need_save = 1;
 	}
 
-	buf = DumpJsonFromRPara(&relay);
-	SaveDate(buf,strlen(buf));
-	free(buf);
+	if(need_save)
+	{
+		buf = DumpJsonFromRPara(&relay);
+		SaveDate(buf,strlen(buf));
+		free(buf);
+	}
 
 	rjson = (char*)malloc(10);
 	if(rjson)
@@ -87,72 +101,86 @@ char* AddValve(cJSON *payload)
 	char* rjson = NULL;
 	char *buf = NULL;
 	VELEM velem = {0};
+	int ret = -1;
 
-	item = cJSON_GetObjectItemCaseSensitive(payload,"ValveId");
-	if(cJSON_IsString(item) && (item->valuestring != NULL))
+	do
 	{
-		strcpy(velem.ValveId,item->valuestring);
-	}
-	else
+		item = cJSON_GetObjectItemCaseSensitive(payload,"ValveId");
+		if(cJSON_IsString(item) && (item->valuestring != NULL))
+		{
+			strcpy(velem.ValveId,item->valuestring);
+		}
+		else
+		{
+			printf("valve id error!\n");
+			break;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"FwVer");
+		if(cJSON_IsString(item) && (item->valuestring != NULL))
+		{
+			strcpy(velem.FwVer,item->valuestring);
+		}
+		else
+		{
+			printf("FwVer error!\n");
+			break;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"HwVer");
+		if(cJSON_IsString(item) && (item->valuestring != NULL))
+		{
+			strcpy(velem.HwVer,item->valuestring);
+		}
+		else
+		{
+			printf("HwVer error!\n");
+			break;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"Model");
+		if(cJSON_IsString(item) && (item->valuestring != NULL))
+		{
+			strcpy(velem.Model,item->valuestring);
+		}
+		else
+		{
+			printf("Model error!\n");
+			break;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"MAC");
+		if(cJSON_IsString(item) && (item->valuestring != NULL))
+		{
+			strcpy(velem.MAC,item->valuestring);
+		}
+		else
+		{
+			printf("MAC error!\n");
+			break;
+		}
+
+		ret = AddElemIntoVList(relay.pvlist,&velem,NULL);
+	}while(0);
+
+	if(!ret)
 	{
-		printf("valve id error!\n");
-		return NULL;
+		buf = DumpJsonFromRPara(&relay);
+		SaveDate(buf,strlen(buf));
+		free(buf);
 	}
 
-	item = cJSON_GetObjectItemCaseSensitive(payload,"FwVer");
-	if(cJSON_IsString(item) && (item->valuestring != NULL))
-	{
-		strcpy(velem.FwVer,item->valuestring);
-	}
-	else
-	{
-		printf("FwVer error!\n");
-		return NULL;
-	}
-
-	item = cJSON_GetObjectItemCaseSensitive(payload,"HwVer");
-	if(cJSON_IsString(item) && (item->valuestring != NULL))
-	{
-		strcpy(velem.HwVer,item->valuestring);
-	}
-	else
-	{
-		printf("HwVer error!\n");
-		return NULL;
-	}
-
-	item = cJSON_GetObjectItemCaseSensitive(payload,"Model");
-	if(cJSON_IsString(item) && (item->valuestring != NULL))
-	{
-		strcpy(velem.Model,item->valuestring);
-	}
-	else
-	{
-		printf("Model error!\n");
-		return NULL;
-	}
-
-	item = cJSON_GetObjectItemCaseSensitive(payload,"MAC");
-	if(cJSON_IsString(item) && (item->valuestring != NULL))
-	{
-		strcpy(velem.MAC,item->valuestring);
-	}
-	else
-	{
-		printf("MAC error!\n");
-		return NULL;
-	}
-
-	AddElemIntoVList(relay.pvlist,&velem,NULL);
-
-	buf = DumpJsonFromRPara(&relay);
-	SaveDate(buf,strlen(buf));
-	free(buf);
-
-	rjson = (char*)malloc(10);
+	rjson = (char*)malloc(20);
 	if(rjson)
 	{
-		sprintf(rjson,"{\"ret\":\"ok\"}");
+		if(ret)
+		{
+			sprintf(rjson,"{\"ret\":\"error\"}");
+		}
+		else
+		{
+			sprintf(rjson,"{\"ret\":\"ok\"}");
+		}
 	}
 	return rjson;
 }
@@ -163,36 +191,57 @@ char* SetValveChildLock(cJSON *payload)
 	char* rjson = NULL;
 	char *buf = NULL;
 	VELEM velem = {0};
+	int ret = -1;
+	int need_save = 0;
 
-	item = cJSON_GetObjectItemCaseSensitive(payload,"ValveId");
-	if(cJSON_IsString(item) && (item->valuestring != NULL))
+	do
 	{
-		strcpy(velem.ValveId,item->valuestring);
-	}
-	else
+		item = cJSON_GetObjectItemCaseSensitive(payload,"ValveId");
+		if(cJSON_IsString(item) && (item->valuestring != NULL))
+		{
+			strcpy(velem.ValveId,item->valuestring);
+		}
+		else
+		{
+			printf("valve id error!\n");
+			break;
+		}
+
+		ret = GetElemFromVList(relay.pvlist,&velem);
+		if(ret)
+		{
+			printf("GetElemFromVList error!\n");
+			break;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"ChildLock");
+		if(cJSON_IsNumber(item))
+		{
+			velem.ChildLock = item->valueint;
+			need_save = 1;
+		}
+
+		ret = SetElemFromVList(relay.pvlist,&velem);
+	}while(0);
+
+	if(!ret && need_save)
 	{
-		printf("valve id error!\n");
-		return NULL;
+		buf = DumpJsonFromRPara(&relay);
+		SaveDate(buf,strlen(buf));
+		free(buf);
 	}
 
-	GetElemFromVList(relay.pvlist,&velem);
-
-	item = cJSON_GetObjectItemCaseSensitive(payload,"ChildLock");
-	if(cJSON_IsNumber(item))
-	{
-		velem.ChildLock = item->valueint;
-	}
-
-	SetElemFromVList(relay.pvlist,&velem);
-
-	buf = DumpJsonFromRPara(&relay);
-	SaveDate(buf,strlen(buf));
-	free(buf);
-
-	rjson = (char*)malloc(10);
+	rjson = (char*)malloc(20);
 	if(rjson)
 	{
-		sprintf(rjson,"{\"ret\":\"ok\"}");
+		if(ret)
+		{
+			sprintf(rjson,"{\"ret\":\"error\"}");
+		}
+		else
+		{
+			sprintf(rjson,"{\"ret\":\"ok\"}");
+		}
 	}
 	return rjson;
 }
@@ -203,42 +252,64 @@ char* SetValveManual(cJSON *payload)
 	char* rjson = NULL;
 	char *buf = NULL;
 	VELEM velem = {0};
+	int ret = -1;
+	int need_save = 0;
 
-	item = cJSON_GetObjectItemCaseSensitive(payload,"ValveId");
-	if(cJSON_IsString(item) && (item->valuestring != NULL))
+	do
 	{
-		strcpy(velem.ValveId,item->valuestring);
-	}
-	else
+		item = cJSON_GetObjectItemCaseSensitive(payload,"ValveId");
+		if(cJSON_IsString(item) && (item->valuestring != NULL))
+		{
+			strcpy(velem.ValveId,item->valuestring);
+		}
+		else
+		{
+			printf("valve id error!\n");
+			break;
+		}
+
+		ret = GetElemFromVList(relay.pvlist,&velem);
+		if(ret)
+		{
+			printf("GetElemFromVList error!\n");
+			break;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"ManualEnable");
+		if(cJSON_IsNumber(item))
+		{
+			velem.ManualEnable = item->valueint;
+			need_save = 1;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"ManualDuration");
+		if(cJSON_IsNumber(item))
+		{
+			velem.ManualDuration = item->valueint;
+			need_save = 1;
+		}
+
+		ret = SetElemFromVList(relay.pvlist,&velem);
+	}while(0);
+
+	if(!ret && need_save)
 	{
-		printf("valve id error!\n");
-		return NULL;
+		buf = DumpJsonFromRPara(&relay);
+		SaveDate(buf,strlen(buf));
+		free(buf);
 	}
 
-	GetElemFromVList(relay.pvlist,&velem);
-
-	item = cJSON_GetObjectItemCaseSensitive(payload,"ManualEnable");
-	if(cJSON_IsNumber(item))
-	{
-		velem.ManualEnable = item->valueint;
-	}
-
-	item = cJSON_GetObjectItemCaseSensitive(payload,"ManualDuration");
-	if(cJSON_IsNumber(item))
-	{
-		velem.ManualDuration = item->valueint;
-	}
-
-	SetElemFromVList(relay.pvlist,&velem);
-
-	buf = DumpJsonFromRPara(&relay);
-	SaveDate(buf,strlen(buf));
-	free(buf);
-
-	rjson = (char*)malloc(10);
+	rjson = (char*)malloc(20);
 	if(rjson)
 	{
-		sprintf(rjson,"{\"ret\":\"ok\"}");
+		if(ret)
+		{
+			sprintf(rjson,"{\"ret\":\"error\"}");
+		}
+		else
+		{
+			sprintf(rjson,"{\"ret\":\"ok\"}");
+		}
 	}
 	return rjson;
 }
@@ -249,28 +320,42 @@ char* DelValve(cJSON *payload)
 	char* rjson = NULL;
 	char *buf = NULL;
 	char id[20] = {0};
+	int ret = -1;
 
-	item = cJSON_GetObjectItemCaseSensitive(payload,"ValveId");
-	if(cJSON_IsString(item) && (item->valuestring != NULL))
+	do
 	{
-		strcpy(id,item->valuestring);
-	}
-	else
+		item = cJSON_GetObjectItemCaseSensitive(payload,"ValveId");
+		if(cJSON_IsString(item) && (item->valuestring != NULL))
+		{
+			strcpy(id,item->valuestring);
+		}
+		else
+		{
+			printf("valve id error!\n");
+			break;
+		}
+
+		ret = DelElemFromVList(relay.pvlist,id);
+	}while(0);
+
+	if(!ret)
 	{
-		printf("valve id error!\n");
-		return NULL;
+		buf = DumpJsonFromRPara(&relay);
+		SaveDate(buf,strlen(buf));
+		free(buf);
 	}
 
-	DelElemFromVList(relay.pvlist,id);
-
-	buf = DumpJsonFromRPara(&relay);
-	SaveDate(buf,strlen(buf));
-	free(buf);
-
-	rjson = (char*)malloc(10);
+	rjson = (char*)malloc(20);
 	if(rjson)
 	{
-		sprintf(rjson,"{\"ret\":\"ok\"}");
+		if(ret)
+		{
+			sprintf(rjson,"{\"ret\":\"error\"}");
+		}
+		else
+		{
+			sprintf(rjson,"{\"ret\":\"ok\"}");
+		}
 	}
 	return rjson;
 }
@@ -282,83 +367,97 @@ char* AddSchedule(cJSON *payload)
 	char *buf = NULL;
 	char id[20] = {0};
 	SELEM selem = {0};
+	int ret = -1;
 
-	item = cJSON_GetObjectItemCaseSensitive(payload,"ValveId");
-	if(cJSON_IsString(item) && (item->valuestring != NULL))
+	do
 	{
-		strcpy(id,item->valuestring);
-	}
-	else
+		item = cJSON_GetObjectItemCaseSensitive(payload,"ValveId");
+		if(cJSON_IsString(item) && (item->valuestring != NULL))
+		{
+			strcpy(id,item->valuestring);
+		}
+		else
+		{
+			printf("valve id error!\n");
+			break;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"Id");
+		if(cJSON_IsString(item) && (item->valuestring != NULL))
+		{
+			strcpy(selem.Id,item->valuestring);
+		}
+		else
+		{
+			printf("Id error!\n");
+			break;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"Enable");
+		if(cJSON_IsNumber(item))
+		{
+			selem.Enable = item->valueint;
+		}
+		else
+		{
+			printf("Enable error!\n");
+			break;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"Duration");
+		if(cJSON_IsNumber(item))
+		{
+			selem.Duration = item->valueint;
+		}
+		else
+		{
+			printf("Duration error!\n");
+			break;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"Time");
+		if(cJSON_IsNumber(item))
+		{
+			selem.Time = item->valueint;
+		}
+		else
+		{
+			printf("Time error!\n");
+			break;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"Week");
+		if(cJSON_IsNumber(item))
+		{
+			selem.Week = item->valueint;
+		}
+		else
+		{
+			printf("Week error!\n");
+			break;
+		}
+
+		ret = AddElemIntoVListSchedule(relay.pvlist,id,&selem);
+	}while(0);
+
+	if(!ret)
 	{
-		printf("valve id error!\n");
-		return NULL;
+		buf = DumpJsonFromRPara(&relay);
+		SaveDate(buf,strlen(buf));
+		free(buf);
 	}
 
-	item = cJSON_GetObjectItemCaseSensitive(payload,"Id");
-	if(cJSON_IsString(item) && (item->valuestring != NULL))
-	{
-		strcpy(selem.Id,item->valuestring);
-	}
-	else
-	{
-		printf("Id error!\n");
-		return NULL;
-	}
-
-	item = cJSON_GetObjectItemCaseSensitive(payload,"Enable");
-	if(cJSON_IsNumber(item))
-	{
-		selem.Enable = item->valueint;
-	}
-	else
-	{
-		printf("Enable error!\n");
-		return NULL;
-	}
-
-	item = cJSON_GetObjectItemCaseSensitive(payload,"Duration");
-	if(cJSON_IsNumber(item))
-	{
-		selem.Duration = item->valueint;
-	}
-	else
-	{
-		printf("Duration error!\n");
-		return NULL;
-	}
-
-	item = cJSON_GetObjectItemCaseSensitive(payload,"Time");
-	if(cJSON_IsNumber(item))
-	{
-		selem.Time = item->valueint;
-	}
-	else
-	{
-		printf("Time error!\n");
-		return NULL;
-	}
-
-	item = cJSON_GetObjectItemCaseSensitive(payload,"Week");
-	if(cJSON_IsNumber(item))
-	{
-		selem.Week = item->valueint;
-	}
-	else
-	{
-		printf("Week error!\n");
-		return NULL;
-	}
-
-	AddElemIntoVListSchedule(relay.pvlist,id,&selem);
-
-	buf = DumpJsonFromRPara(&relay);
-	SaveDate(buf,strlen(buf));
-	free(buf);
-
-	rjson = (char*)malloc(10);
+	rjson = (char*)malloc(20);
 	if(rjson)
 	{
-		sprintf(rjson,"{\"ret\":\"ok\"}");
+		if(ret)
+		{
+			sprintf(rjson,"{\"ret\":\"error\"}");
+		}
+		else
+		{
+			sprintf(rjson,"{\"ret\":\"ok\"}");
+		}
 	}
 	return rjson;
 }
@@ -370,65 +469,89 @@ char* SetSchedule(cJSON *payload)
 	char *buf = NULL;
 	char id[20] = {0};
 	SELEM selem = {0};
+	int ret = -1;
+	int need_save = 0;
 
-	item = cJSON_GetObjectItemCaseSensitive(payload,"ValveId");
-	if(cJSON_IsString(item) && (item->valuestring != NULL))
+	do
 	{
-		strcpy(id,item->valuestring);
-	}
-	else
+		item = cJSON_GetObjectItemCaseSensitive(payload,"ValveId");
+		if(cJSON_IsString(item) && (item->valuestring != NULL))
+		{
+			strcpy(id,item->valuestring);
+		}
+		else
+		{
+			printf("valve id error!\n");
+			break;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"Id");
+		if(cJSON_IsString(item) && (item->valuestring != NULL))
+		{
+			strcpy(selem.Id,item->valuestring);
+		}
+		else
+		{
+			printf("Id error!\n");
+			break;
+		}
+
+		ret = GetElemFromVListSchedule(relay.pvlist,id,&selem);
+		if(ret)
+		{
+			printf("GetElemFromVListSchedule error!\n");
+			break;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"Enable");
+		if(cJSON_IsNumber(item))
+		{
+			selem.Enable = item->valueint;
+			need_save = 1;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"Duration");
+		if(cJSON_IsNumber(item))
+		{
+			selem.Duration = item->valueint;
+			need_save = 1;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"Time");
+		if(cJSON_IsNumber(item))
+		{
+			selem.Time = item->valueint;
+			need_save = 1;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"Week");
+		if(cJSON_IsNumber(item))
+		{
+			selem.Week = item->valueint;
+			need_save = 1;
+		}
+
+		ret = SetElemFromVListSchedule(relay.pvlist,id,&selem);
+	}while(0);
+
+	if(!ret && need_save)
 	{
-		printf("valve id error!\n");
-		return NULL;
+		buf = DumpJsonFromRPara(&relay);
+		SaveDate(buf,strlen(buf));
+		free(buf);
 	}
 
-	item = cJSON_GetObjectItemCaseSensitive(payload,"Id");
-	if(cJSON_IsString(item) && (item->valuestring != NULL))
-	{
-		strcpy(selem.Id,item->valuestring);
-	}
-	else
-	{
-		printf("Id error!\n");
-		return NULL;
-	}
-
-	GetElemFromVListSchedule(relay.pvlist,id,&selem);
-
-	item = cJSON_GetObjectItemCaseSensitive(payload,"Enable");
-	if(cJSON_IsNumber(item))
-	{
-		selem.Enable = item->valueint;
-	}
-
-	item = cJSON_GetObjectItemCaseSensitive(payload,"Duration");
-	if(cJSON_IsNumber(item))
-	{
-		selem.Duration = item->valueint;
-	}
-
-	item = cJSON_GetObjectItemCaseSensitive(payload,"Time");
-	if(cJSON_IsNumber(item))
-	{
-		selem.Time = item->valueint;
-	}
-
-	item = cJSON_GetObjectItemCaseSensitive(payload,"Week");
-	if(cJSON_IsNumber(item))
-	{
-		selem.Week = item->valueint;
-	}
-
-	SetElemFromVListSchedule(relay.pvlist,id,&selem);
-
-	buf = DumpJsonFromRPara(&relay);
-	SaveDate(buf,strlen(buf));
-	free(buf);
-
-	rjson = (char*)malloc(10);
+	rjson = (char*)malloc(20);
 	if(rjson)
 	{
-		sprintf(rjson,"{\"ret\":\"ok\"}");
+		if(ret)
+		{
+			sprintf(rjson,"{\"ret\":\"error\"}");
+		}
+		else
+		{
+			sprintf(rjson,"{\"ret\":\"ok\"}");
+		}
 	}
 	return rjson;
 }
@@ -440,39 +563,53 @@ char* DelSchedule(cJSON *payload)
 	char *buf = NULL;
 	char id[20] = {0};
 	char sid[20] = {0};
+	int ret = -1;
 
-	item = cJSON_GetObjectItemCaseSensitive(payload,"ValveId");
-	if(cJSON_IsString(item) && (item->valuestring != NULL))
+	do
 	{
-		strcpy(id,item->valuestring);
-	}
-	else
+		item = cJSON_GetObjectItemCaseSensitive(payload,"ValveId");
+		if(cJSON_IsString(item) && (item->valuestring != NULL))
+		{
+			strcpy(id,item->valuestring);
+		}
+		else
+		{
+			printf("valve id error!\n");
+			break;
+		}
+
+		item = cJSON_GetObjectItemCaseSensitive(payload,"Id");
+		if(cJSON_IsString(item) && (item->valuestring != NULL))
+		{
+			strcpy(sid,item->valuestring);
+		}
+		else
+		{
+			printf("Id error!\n");
+			break;
+		}
+
+		ret = DelElemFromvListSchedule(relay.pvlist,id,sid);
+	}while(0);
+
+	if(!ret)
 	{
-		printf("valve id error!\n");
-		return NULL;
+		buf = DumpJsonFromRPara(&relay);
+		SaveDate(buf,strlen(buf));
+		free(buf);
 	}
 
-	item = cJSON_GetObjectItemCaseSensitive(payload,"Id");
-	if(cJSON_IsString(item) && (item->valuestring != NULL))
-	{
-		strcpy(sid,item->valuestring);
-	}
-	else
-	{
-		printf("Id error!\n");
-		return NULL;
-	}
-
-	DelElemFromvListSchedule(relay.pvlist,id,sid);
-
-	buf = DumpJsonFromRPara(&relay);
-	SaveDate(buf,strlen(buf));
-	free(buf);
-
-	rjson = (char*)malloc(10);
+	rjson = (char*)malloc(20);
 	if(rjson)
 	{
-		sprintf(rjson,"{\"ret\":\"ok\"}");
+		if(ret)
+		{
+			sprintf(rjson,"{\"ret\":\"error\"}");
+		}
+		else
+		{
+			sprintf(rjson,"{\"ret\":\"ok\"}");
+		}
 	}
 	return rjson;
 }
@@ -563,7 +700,7 @@ char* SetPara(char* json)
 
 char* DumpRelayPara()
 {
-	return DumpJsonFromRPara(&relay); 
+	return DumpJsonFromOnlyRPara(&relay); 
 }
 
 char* GetRelayId()
@@ -573,7 +710,11 @@ char* GetRelayId()
 
 void SetUserId(char *userid)
 {
+	char *buf = NULL;
 	strncpy(relay.UserId,userid,sizeof(relay.UserId));
+	buf = DumpJsonFromRPara(&relay);
+	SaveDate(buf,strlen(buf));
+	free(buf);
 }
 
 void InitPara()

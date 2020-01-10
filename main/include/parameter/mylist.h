@@ -64,13 +64,13 @@ int AddElemIntoSList(SLIST* pslist,SELEM* selem);
 int DelElemFromSList(SLIST* pslist,char* id);
 int GetElemFromSList(SLIST* pslist,SELEM* selem);
 int SetElemFromSList(SLIST* pslist,SELEM* selem);
-char* DumpJsonFromSList(SLIST* pslist);
-int LoadSListFromJson(SLIST* pslist,char* json);
+cJSON* DumpJsonFromSList(SLIST* pslist);
+int LoadSListFromJson(SLIST* pslist,cJSON* json);
 
 //ValveList
 VLIST* InitVList();
 int ReleaseVList(VLIST* pvlist);
-int AddElemIntoVList(VLIST* pvlist,VELEM* velem,char* json);
+int AddElemIntoVList(VLIST* pvlist,VELEM* velem,cJSON* json);
 int DelElemFromVList(VLIST* pvlist,char* id);
 int GetElemFromVList(VLIST* pvlist,VELEM* velem);
 int SetElemFromVList(VLIST* pvlist,VELEM* velem);
@@ -78,10 +78,11 @@ int AddElemIntoVListSchedule(VLIST* pvlist,char* id,SELEM* selem);
 int DelElemFromvListSchedule(VLIST* pvlist,char* id,char* sid);
 int GetElemFromVListSchedule(VLIST* pvlist,char* id,SELEM* selem);
 int SetElemFromVListSchedule(VLIST* pvlist,char* id,SELEM* selem);
-char* DumpJsonFromVList(VLIST* pvlist);
-int LoadVListFromJson(VLIST* pvlist,char* json);
+cJSON* DumpJsonFromVList(VLIST* pvlist);
+int LoadVListFromJson(VLIST* pvlist,cJSON* json);
 
 //RelayPara
+char* DumpJsonFromOnlyRPara(RPARA* prpara);
 char* DumpJsonFromRPara(RPARA* prpara);
 int LoadRParaFromJson(RPARA* prpara,char* json);
 #endif
