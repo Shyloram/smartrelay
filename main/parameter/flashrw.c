@@ -10,7 +10,7 @@ static const char *TAG = "FLASHRW";
 #define RELAY_DATA_SEC_MAX 150
 #define FLASH_SEC_SIZE 4096
 #define GET_ALIGN_STRING_LEN(len)    ((len + 3) & ~3)
-char DefauleJson[] = "{\"RelayId\":\"RYER191127000001\",\"UserId\":\"Defaule\",\"FwVer\":\"V0.0.00.001\",\"HwVer\":\"V0.0.00.001\",\"Model\":\"unicon\",\"MAC\":\"aa:bb:cc:dd:ee:ff\",\"Address\":\"Defaule\",\"ValveList\":[]}";
+char DefauleJson[] = "{\"RID\":\"RYER191127000001\",\"UID\":\"Defaule\",\"FV\":\"V0.0.00.001\",\"HV\":\"V0.0.00.001\",\"MOD\":\"unicon\",\"MAC\":\"aa:bb:cc:dd:ee:ff\",\"ADD\":\"Defaule\",\"VL\":[]}";
 
 int SaveDate(char* data, int len)
 {
@@ -36,7 +36,7 @@ int SaveDate(char* data, int len)
 	spi_flash_erase_sector(sec_num);
 	while(slen)
 	{
-		printf("len:%d,slen:%d,rlen:%d,nlen:%d,sec_num:%d\n",len,slen,rlen,nlen,sec_num);
+		//printf("len:%d,slen:%d,rlen:%d,nlen:%d,sec_num:%d\n",len,slen,rlen,nlen,sec_num);
 		if(slen >= 1024)
 		{
 			spi_flash_write(sec_num * FLASH_SEC_SIZE + rlen, data + nlen, 1024);
@@ -62,7 +62,7 @@ int SaveDate(char* data, int len)
 			return -1;
 		}
 	}
-	printf("len:%d,slen:%d,rlen:%d,nlen:%d,sec_num:%d\n",len,slen,rlen,nlen,sec_num);
+	//printf("len:%d,slen:%d,rlen:%d,nlen:%d,sec_num:%d\n",len,slen,rlen,nlen,sec_num);
 	return 0;
 }
 
@@ -96,7 +96,7 @@ char* LoadDate()
 	*(pdata+len) = 0;
 	while(len)
 	{
-		printf("len:%d,rlen:%d,nlen:%d,sec_num:%d\n",len,rlen,nlen,sec_num);
+		//printf("len:%d,rlen:%d,nlen:%d,sec_num:%d\n",len,rlen,nlen,sec_num);
 		if(len >= 1024)
 		{
 			spi_flash_read(sec_num * FLASH_SEC_SIZE + rlen, pdata + nlen, 1024);
@@ -120,6 +120,6 @@ char* LoadDate()
 			return NULL;
 		}
 	}
-	printf("len:%d,rlen:%d,nlen:%d,sec_num:%d\n",len,rlen,nlen,sec_num);
+	//printf("len:%d,rlen:%d,nlen:%d,sec_num:%d\n",len,rlen,nlen,sec_num);
 	return pdata;
 }

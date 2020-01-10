@@ -205,6 +205,22 @@ void aws_iot_task(void *param)
 	}
 
 	ESP_LOGI(TAG, "Subscribing...");
+
+	char sTOPIC[50]= {};
+	sprintf(sTOPIC,"Rye/relay/%s/update",clientid);
+	const int sTOPIC_LEN = strlen(sTOPIC);
+
+	rc = aws_iot_mqtt_subscribe(&client, sTOPIC, sTOPIC_LEN, QOS1, set_relay_callback_handler, (void*)clientid);
+	if(SUCCESS != rc) 
+	{
+		ESP_LOGE(TAG, "Error subscribing : %d ", rc);
+		abort();
+	}
+	else
+	{
+		ESP_LOGE(TAG, "subscribed : %s ", sTOPIC);
+	}
+
 	ESP_LOGI(TAG, "Subscribed...");
 
 	while(1) 
@@ -218,7 +234,7 @@ void aws_iot_task(void *param)
 			continue;
 		}
 
-		ESP_LOGI(TAG, "Stack remaining for task '%s' is %lu bytes", pcTaskGetTaskName(NULL), uxTaskGetStackHighWaterMark(NULL));
+		//ESP_LOGI(TAG, "Stack remaining for task '%s' is %lu bytes", pcTaskGetTaskName(NULL), uxTaskGetStackHighWaterMark(NULL));
 		vTaskDelay(1000 / portTICK_RATE_MS);
 	}
 
