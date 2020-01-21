@@ -9,6 +9,7 @@ extern void InitPara();
 extern void InitWifi();
 extern void InitAwsIot();
 extern void InitTcpService();
+extern void InitUart();
 
 void app_main()
 {
@@ -24,12 +25,15 @@ void app_main()
 	/* Init Parameter */
 	InitPara();
 
+	/* Init Uart */
+	InitUart();
+
 	/* Init Wifi Lib */
 	InitWifi();
 
 	/* Init Tcp Server */
-	//InitTcpService();
+	InitTcpService();
 
 	/* Init AWS IOT */
-	InitAwsIot();
+	//InitAwsIot();
 }

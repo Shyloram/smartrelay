@@ -5,6 +5,7 @@
 #include "mylist.h"
 #include "parameter.h"
 #include "flashrw.h"
+#include "uart915.h"
 
 static const char *TAG = "PARA";
 RPARA relay;
@@ -221,6 +222,7 @@ char* SetValveChildLock(cJSON *payload)
 			need_save = 1;
 		}
 
+		uart_set_valve_childlock(velem.ValveId,(char)velem.ChildLock);
 		ret = SetElemFromVList(relay.pvlist,&velem);
 	}while(0);
 
